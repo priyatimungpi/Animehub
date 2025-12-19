@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { AdminService } from '../../../services/admin';
@@ -270,7 +270,7 @@ This action cannot be undone.`,
     setAnimeEpisodes([]); // Clear episodes when modal closes
   };
 
-  const handleAnimeCreated = async (newAnime?: any) => {
+  const handleAnimeCreated = async (_newAnime?: any) => {
     setShowAddAnimeModal(false);
     // Force refresh - go to page 1 since new anime will be there (sorted by created_at desc)
     await fetchAnime(1);
@@ -295,7 +295,7 @@ This action cannot be undone.`,
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
-  const handleEpisodeCreated = async (newEpisode?: any) => {
+  const handleEpisodeCreated = async (_newEpisode?: any) => {
     setShowAddEpisodeModal(false);
     setSelectedAnimeForEpisode(null);
     
@@ -608,243 +608,298 @@ This action cannot be undone.`,
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Anime Management</h1>
-              <p className="mt-2 text-gray-600">Manage your anime content library</p>
-            </div>
-            <div className="flex space-x-3 mt-4 sm:mt-0">
-              <button
-                onClick={() => setShowAddAnimeModal(true)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
-              >
-                <span className="text-lg">🎬</span>
-                <span>Add New Anime</span>
-              </button>
-              <button
-                onClick={() => setShowImporter(true)}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
-              >
-                <span className="text-lg">📥</span>
-                <span>Import Anime</span>
-              </button>
-              <button
-                onClick={() => setShowScraper(true)}
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2"
-              >
-                <span className="text-lg">🎬</span>
-                <span>Episode Scraper</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-blue-600 text-lg">🎬</span>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section - Anime Themed */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-indigo-200 p-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-2xl">🎬</span>
+                  </div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    Anime Management
+                  </h1>
                 </div>
+                <p className="text-gray-600 ml-13">Manage your anime content library with power and precision</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Anime</p>
-                <p className="text-2xl font-bold text-gray-900">{totalAnime}</p>
+              
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setShowAddAnimeModal(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-lg">➕</span>
+                  <span className="font-medium">Add Anime</span>
+                </button>
+                <button
+                  onClick={() => setShowImporter(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-lg">📥</span>
+                  <span className="font-medium">Import</span>
+                </button>
+                <button
+                  onClick={() => setShowScraper(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-lg">🔍</span>
+                  <span className="font-medium">Scraper</span>
+                </button>
               </div>
             </div>
           </div>
+        </motion.div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-green-600 text-lg">✅</span>
-                </div>
+        {/* Stats Cards - Anime Themed */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-5 border-l-4 border-indigo-500 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Total Anime</p>
+                <p className="text-3xl font-bold text-indigo-600">{totalAnime}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Published</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">🎬</span>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-5 border-l-4 border-green-500 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Published</p>
+                <p className="text-3xl font-bold text-green-600">
                   {anime.filter(a => a.status === 'published').length}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <span className="text-yellow-600 text-lg">⏳</span>
-                </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">✅</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-5 border-l-4 border-yellow-500 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Ongoing</p>
+                <p className="text-3xl font-bold text-yellow-600">
                   {anime.filter(a => a.status === 'pending').length}
                 </p>
               </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">⏳</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-600 text-lg">📝</span>
-                </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-5 border-l-4 border-purple-500 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Selected</p>
+                <p className="text-3xl font-bold text-purple-600">{selectedAnime.size}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Drafts</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {anime.filter(a => a.status === 'draft').length}
-                </p>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">📝</span>
               </div>
+            </div>
+          </motion.div>
+        </div>
+
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">❌</span>
+              <span className="text-red-700 font-medium">{error}</span>
+            </div>
+          </motion.div>
+        )}
+        
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">✅</span>
+              <span className="text-green-700 font-medium">{successMessage}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Preloading Status */}
+        {Object.keys(episodesCache).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 rounded-r-xl shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-blue-400 border-t-blue-600 rounded-full animate-spin"></div>
+              <span className="text-blue-700 font-medium">
+                ⚡ Preloaded episodes for {Object.keys(episodesCache).length} anime - Click "View Details" for instant loading!
+              </span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Filters and Search - Anime Themed */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-purple-200 p-6 mb-6">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="text-xl">🔎</span>
+            <h2 className="text-lg font-semibold text-gray-800">Search & Filters</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="md:col-span-2">
+              <label htmlFor="search" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <span>🔍</span> Search Anime
+              </label>
+              <input
+                type="text"
+                id="search"
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                placeholder="Search by title..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label htmlFor="statusFilter" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <span>📊</span> Status
+              </label>
+              <select
+                id="statusFilter"
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="published">✅ Published</option>
+                <option value="pending">⏳ Ongoing</option>
+                <option value="draft">📝 Draft</option>
+              </select>
+              </div>
+
+            {/* Genre Filter */}
+            <div>
+              <label htmlFor="genreFilter" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <span>🎭</span> Genre
+              </label>
+              <select
+                id="genreFilter"
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                value={filterGenre}
+                onChange={(e) => setFilterGenre(e.target.value)}
+              >
+                <option value="all">All Genres</option>
+                <option value="action">⚔️ Action</option>
+                <option value="romance">💕 Romance</option>
+                <option value="comedy">😂 Comedy</option>
+                <option value="drama">🎭 Drama</option>
+                <option value="fantasy">✨ Fantasy</option>
+                <option value="sci-fi">🚀 Sci-Fi</option>
+                <option value="horror">👻 Horror</option>
+                <option value="slice of life">🌸 Slice of Life</option>
+              </select>
             </div>
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-6">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-          
-          {successMessage && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-              {successMessage}
-            </div>
-          )}
-
-          {/* Preloading Status */}
-          {Object.keys(episodesCache).length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-                <span className="text-sm">
-                  ⚡ Preloaded episodes for {Object.keys(episodesCache).length} anime - Click "View Details" for instant loading!
-                </span>
-              </div>
-            </div>
-          )}
-          
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                Search Anime
-              </label>
-                  <input
-                    type="text"
-                id="search"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Search by title or description..."
-                    value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-              </div>
-
-            {/* Status Filter */}
-              <div>
-              <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                Filter by Status
-              </label>
-                <select
-                id="statusFilter"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="published">Published</option>
-                  <option value="pending">Pending</option>
-                  <option value="draft">Draft</option>
-                </select>
-              </div>
-
-            {/* Genre Filter */}
-              <div>
-              <label htmlFor="genreFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                Filter by Genre
-              </label>
-                <select
-                id="genreFilter"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                value={filterGenre}
-                onChange={(e) => setFilterGenre(e.target.value)}
-                >
-                  <option value="all">All Genres</option>
-                  <option value="action">Action</option>
-                  <option value="romance">Romance</option>
-                  <option value="comedy">Comedy</option>
-                  <option value="drama">Drama</option>
-                  <option value="fantasy">Fantasy</option>
-                <option value="sci-fi">Sci-Fi</option>
-                <option value="horror">Horror</option>
-                <option value="slice of life">Slice of Life</option>
-                </select>
-            </div>
-          </div>
-              </div>
-
-        {/* Bulk Actions */}
+        {/* Bulk Actions - Redesigned */}
         {selectedAnime.size > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <span className="text-blue-800 font-medium">
-                {selectedAnime.size} anime selected
-              </span>
-              <div className="flex space-x-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-2xl p-5 mb-6 shadow-lg"
+          >
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold">{selectedAnime.size}</span>
+                </div>
+                <span className="text-indigo-900 font-semibold">anime selected</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleBulkAction('published')}
                   disabled={updatingAnime === 'bulk'}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm font-medium"
                 >
-                  {updatingAnime === 'bulk' ? 'Updating...' : 'Publish Selected'}
+                  {updatingAnime === 'bulk' ? '⏳ Updating...' : '✅ Publish'}
                 </button>
                 <button
                   onClick={() => handleBulkAction('pending')}
                   disabled={updatingAnime === 'bulk'}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm font-medium"
                 >
-                  {updatingAnime === 'bulk' ? 'Updating...' : 'Mark Pending'}
+                  {updatingAnime === 'bulk' ? '⏳ Updating...' : '⏳ Pending'}
                 </button>
                 <button
                   onClick={() => handleBulkAction('draft')}
                   disabled={updatingAnime === 'bulk'}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm font-medium"
                 >
-                  {updatingAnime === 'bulk' ? 'Updating...' : 'Mark Draft'}
+                  {updatingAnime === 'bulk' ? '⏳ Updating...' : '📝 Draft'}
                 </button>
                 <button
                   onClick={() => handleBulkAction('delete')}
                   disabled={updatingAnime === 'bulk'}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm font-medium"
                 >
-                  {updatingAnime === 'bulk' ? 'Deleting...' : 'Delete Selected'}
+                  {updatingAnime === 'bulk' ? '⏳ Deleting...' : '🗑️ Delete'}
                 </button>
                 <button
                   onClick={() => setSelectedAnime(new Set())}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  className="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-md text-sm font-medium"
                 >
-                  Clear Selection
+                  ✕ Clear
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Select All Header */}
+        {/* Select All Header - Redesigned */}
         {!loading && filteredAnime.length > 0 && (
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+          <div className="bg-white/70 backdrop-blur-sm border-2 border-purple-200 rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-4">
                 <input
                   type="checkbox"
                   checked={selectedAnime.size === filteredAnime.length && filteredAnime.length > 0}
@@ -871,337 +926,495 @@ This action cannot be undone.`,
           </div>
         )}
 
-        {/* Anime List */}
+        {/* Anime List - Completely Redesigned */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="flex flex-col justify-center items-center h-64">
+            <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-600 font-medium">Loading anime...</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredAnime.map((item) => (
-          <motion.div
+          <div className="grid grid-cols-1 gap-5">
+            {filteredAnime.map((item, index) => (
+              <motion.div
                 key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="group relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden hover:border-purple-300 hover:shadow-2xl transition-all duration-300"
               >
-                <div className="flex items-start justify-between">
-                  {/* Anime Info */}
-                  <div className="flex-1 flex items-start space-x-4">
-                    <div className="flex-shrink-0">
+                {/* Selection Checkbox - Top Right Corner */}
+                <div className="absolute top-4 left-4 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedAnime.has(item.id)}
+                    onChange={(e) => {
+                      const newSelected = new Set(selectedAnime);
+                      if (e.target.checked) {
+                        newSelected.add(item.id);
+                      } else {
+                        newSelected.delete(item.id);
+                      }
+                      setSelectedAnime(newSelected);
+                    }}
+                    className="w-5 h-5 rounded-md border-2 border-white text-purple-600 focus:ring-2 focus:ring-purple-500 shadow-lg cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-6 p-6">
+                  {/* Poster - Enhanced */}
+                  <div className="flex-shrink-0">
+                    <div className="relative group/poster">
                       <img
-                        className="h-24 w-18 rounded-lg object-cover shadow-md"
+                        className="h-56 w-40 rounded-xl object-cover shadow-xl border-2 border-purple-200 group-hover:scale-105 transition-transform duration-300"
                         src={item.poster_url || item.thumbnail || '/placeholder-anime.jpg'}
                         alt={item.title}
-                        width={72}
-                        height={96}
-                        loading="lazy"
-                        decoding="async"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'https://via.placeholder.com/150x200/6366f1/ffffff?text=Anime';
+                          target.src = 'https://via.placeholder.com/160x224/6366f1/ffffff?text=Anime';
                         }}
                       />
-                </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
-                          {getStatusIcon(item.status)} {item.status}
-                        </span>
-                        {episodesCache[item.id] && (
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            ⚡ {episodesCache[item.id].length} episodes ready
-                          </span>
-                        )}
-            </div>
+                      {episodesCache[item.id] && (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                          ⚡ {episodesCache[item.id].length}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                  {/* Content */}
+                  <div className="flex-1 flex flex-col justify-between">
+                    {/* Title & Status */}
+                    <div>
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <h3 className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                          {item.title}
+                        </h3>
+                        <span className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold border-2 ${getStatusColor(item.status)} shadow-sm`}>
+                          {getStatusIcon(item.status)} {item.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
                         {item.description || 'No description available'}
                       </p>
                       
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center space-x-1">
-                          <span className="text-lg">🎬</span>
-                          <span>{item.episode_count || 0} episodes</span>
-                        </span>
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                        <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-lg">
+                          <span className="text-xl">🎬</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Episodes</p>
+                            <p className="font-bold text-indigo-600">{item.episode_count || 0}</p>
+                          </div>
+                        </div>
                         
-                        <span className="flex items-center space-x-1">
-                          <span className="text-lg">⭐</span>
-                          <span>Rating: {item.average_rating || 'N/A'}</span>
-                        </span>
+                        <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-lg">
+                          <span className="text-xl">⭐</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Rating</p>
+                            <p className="font-bold text-yellow-600">{item.average_rating || 'N/A'}</p>
+                          </div>
+                        </div>
                         
-                        <span className="flex items-center space-x-1">
-                          <span className="text-lg">👀</span>
-                          <span>{item.views?.toLocaleString() || '0'} views</span>
-                        </span>
+                        <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-lg">
+                          <span className="text-xl">👀</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Views</p>
+                            <p className="font-bold text-purple-600">{item.views?.toLocaleString() || '0'}</p>
+                          </div>
+                        </div>
                         
-                        <span className="flex items-center space-x-1">
-                          <span className="text-lg">📅</span>
-                          <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                        </span>
-                        
-                        {item.genres && item.genres.length > 0 && (
-                          <div className="flex items-center space-x-1">
-                            <span className="text-lg">🏷️</span>
-                            <div className="flex space-x-1">
-                              {item.genres.slice(0, 3).map((genre: string, index: number) => (
-                                <span key={index} className="flex items-center space-x-1">
-                                  <span>{getGenreIcon(genre)}</span>
-                                  <span>{genre}</span>
-                                </span>
-                              ))}
-                              {item.genres.length > 3 && (
-                                <span className="text-gray-400">+{item.genres.length - 3} more</span>
-                              )}
-                </div>
-              </div>
-                        )}
-                </div>
-              </div>
-            </div>
+                        <div className="flex items-center gap-2 bg-pink-50 px-3 py-2 rounded-lg">
+                          <span className="text-xl">📅</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Added</p>
+                            <p className="font-bold text-pink-600 text-xs">{new Date(item.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col space-y-3">
-                    {/* Status Change */}
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">Status:</label>
-                      <div className="flex items-center space-x-2">
+                      {/* Genres */}
+                      {item.genres && item.genres.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {item.genres.slice(0, 5).map((genre: string, index: number) => (
+                            <span key={index} className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-xs font-semibold border border-purple-200">
+                              {getGenreIcon(genre)} {genre}
+                            </span>
+                          ))}
+                          {item.genres.length > 5 && (
+                            <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
+                              +{item.genres.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 pt-4 border-t-2 border-gray-100">
+                      {/* Status Selector */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold text-gray-700">Status:</label>
                         <select
                           value={item.status}
                           onChange={(e) => handleStatusChange(item.id, e.target.value as any)}
                           disabled={updatingAnime === item.id}
-                          className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                          className="flex-1 px-3 py-2 bg-white border-2 border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50 transition-all"
                         >
-                          <option value="published">Published</option>
-                          <option value="pending">Pending</option>
-                          <option value="draft">Draft</option>
+                          <option value="published">✅ Published</option>
+                          <option value="pending">⏳ Pending</option>
+                          <option value="draft">📝 Draft</option>
                         </select>
                         {updatingAnime === item.id && (
-                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
                         )}
-                </div>
-              </div>
+                      </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-2">
-                      <button 
-                        onClick={() => handleViewAnimeDetails(item)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => handleEditAnime(item)}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleAddEpisode(item)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                      >
-                        Add Episode
-                      </button>
-                      <button
-                        onClick={() => handleScrapAnime(item)}
-                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm flex items-center space-x-1"
-                      >
-                        <span>🎬</span>
-                        <span>Scrap Episodes</span>
-                      </button>
-                      <button
-                        onClick={() => handleLargeScrape(item)}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center space-x-1"
-                      >
-                        <span>🚀</span>
-                        <span>Large Scrape</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAnime(item.id, item.title)}
-                        disabled={updatingAnime === item.id}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors text-sm"
-                      >
-                        {updatingAnime === item.id ? 'Deleting...' : 'Delete'}
-                      </button>
-            </div>
-
-                    {/* Selection Checkbox */}
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedAnime.has(item.id)}
-                        onChange={(e) => {
-                          const newSelected = new Set(selectedAnime);
-                          if (e.target.checked) {
-                            newSelected.add(item.id);
-                          } else {
-                            newSelected.delete(item.id);
-                          }
-                          setSelectedAnime(newSelected);
-                        }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-500">Select for bulk action</span>
+                      {/* Action Buttons Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        <button 
+                          onClick={() => handleViewAnimeDetails(item)}
+                          className="px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          <span>👁️</span> Details
+                        </button>
+                        <button
+                          onClick={() => handleEditAnime(item)}
+                          className="px-3 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          <span>✏️</span> Edit
+                        </button>
+                        <button
+                          onClick={() => handleAddEpisode(item)}
+                          className="px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          <span>➕</span> Episode
+                        </button>
+                        <button
+                          onClick={() => handleScrapAnime(item)}
+                          className="px-3 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          <span>🔍</span> Scrape
+                        </button>
+                        <button
+                          onClick={() => handleLargeScrape(item)}
+                          className="px-3 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-xl hover:from-pink-700 hover:to-rose-700 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          <span>🚀</span> Bulk
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAnime(item.id, item.title)}
+                          disabled={updatingAnime === item.id}
+                          className="px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 transition-all text-xs font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                        >
+                          {updatingAnime === item.id ? '⏳' : '🗑️'} Delete
+                        </button>
+                      </div>
                     </div>
-                          </div>
-                        </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
             
             {filteredAnime.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">🎬</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No anime found</h3>
-                <p className="text-gray-500">
-                  {searchTerm || filterStatus !== 'all' || filterGenre !== 'all'
-                    ? 'No anime match your current filters.'
-                    : 'There are no anime to display.'
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="col-span-full"
+              >
+                <div className="bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-indigo-50/50 backdrop-blur-sm border-2 border-dashed border-purple-300/50 rounded-3xl p-16 text-center">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{ 
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="text-9xl mb-6 inline-block"
+                  >
+                    🎬
+                  </motion.div>
+                  
+                  <h3 className="text-3xl font-bold mb-3">
+                    <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+                      No Anime Found
+                    </span>
+                  </h3>
+                  
+                  <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+                    {searchTerm || filterStatus !== 'all' || filterGenre !== 'all'
+                      ? 'No anime match your current filters. Try adjusting your search criteria.'
+                      : 'Your anime library is empty. Start by adding or importing anime.'
                   }
-                </p>
-              </div>
+                  </p>
+                  
+                  {!searchTerm && filterStatus === 'all' && filterGenre === 'all' && (
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={() => setShowAddAnimeModal(true)}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+                      >
+                        ➕ Add Anime
+                      </button>
+                      <button
+                        onClick={() => setShowImporter(true)}
+                        className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+                      >
+                        📥 Import Anime
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             )}
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-8 space-x-2">
-                          <button
-              onClick={() => fetchAnime(currentPage - 1)}
-              disabled={currentPage === 1 || loading}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-            >
-              Previous
-                          </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
-                          <button
-                key={pageNumber}
-                onClick={() => fetchAnime(pageNumber)}
-                disabled={currentPage === pageNumber || loading}
-                className={`px-4 py-2 rounded-lg ${
-                  currentPage === pageNumber
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center mt-8"
+          >
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-purple-200/50">
+              <button
+                onClick={() => fetchAnime(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
               >
-                {pageNumber}
-                          </button>
-            ))}
-                          <button
-              onClick={() => fetchAnime(currentPage + 1)}
-              disabled={currentPage === totalPages || loading}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-                          >
-              Next
-                          </button>
-                        </div>
+                <span>←</span>
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => {
+                  // Show first, last, current, and adjacent pages
+                  const showPage = 
+                    pageNumber === 1 || 
+                    pageNumber === totalPages || 
+                    Math.abs(pageNumber - currentPage) <= 1;
+                  
+                  const showEllipsis = 
+                    (pageNumber === currentPage - 2 && currentPage > 3) ||
+                    (pageNumber === currentPage + 2 && currentPage < totalPages - 2);
+
+                  if (showEllipsis) {
+                    return (
+                      <span key={pageNumber} className="px-2 text-gray-400">
+                        ···
+                      </span>
+                    );
+                  }
+
+                  if (!showPage) return null;
+
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => fetchAnime(pageNumber)}
+                      disabled={currentPage === pageNumber || loading}
+                      className={`min-w-[44px] h-11 rounded-xl font-medium transition-all duration-200 ${
+                        currentPage === pageNumber
+                          ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-indigo-600 text-white shadow-lg scale-110'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 hover:scale-105'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => fetchAnime(currentPage + 1)}
+                disabled={currentPage === totalPages || loading}
+                className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <span>→</span>
+              </button>
+            </div>
+          </motion.div>
         )}
       </div>
 
       {/* Anime Details Modal */}
       {showAnimeModal && selectedAnimeForModal && (
-        <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-pink-900/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-2 border-purple-300/50 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden"
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-2xl font-bold text-white drop-shadow-lg">Anime Details</h2>
-              <button
-                onClick={closeAnimeModal}
-                className="text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            {/* Modal Header with Gradient */}
+            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 p-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00em0wLTEwYzAtMi4yMS0xLjc5LTQtNC00cy00IDEuNzktNCA0IDEuNzkgNCA0IDQgNC0xLjc5IDQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-2xl">
+                    🎬
+                  </div>
+                  <h2 className="text-3xl font-bold text-white drop-shadow-lg">Anime Details</h2>
+                </div>
+                <button
+                  onClick={closeAnimeModal}
+                  className="text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 p-3 rounded-xl backdrop-blur-sm"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-6">
-              <div className="flex items-start space-x-6 mb-6">
-                {/* Poster */}
-                <div className="flex-shrink-0">
-                  <img
-                    className="h-48 w-36 rounded-xl object-cover border-4 border-white/30 shadow-xl"
-                    src={selectedAnimeForModal.poster_url || selectedAnimeForModal.thumbnail || '/placeholder-anime.jpg'}
-                    alt={selectedAnimeForModal.title}
-                    width={144}
-                    height={192}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://via.placeholder.com/300x400/6366f1/ffffff?text=Anime';
-                    }}
-                  />
-                </div>
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto max-h-[calc(90vh-100px)] custom-scrollbar">
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="flex flex-col lg:flex-row gap-6 mb-6">
+                  {/* Poster */}
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex-shrink-0"
+                  >
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                      <img
+                        className="relative h-64 w-48 rounded-2xl object-cover border-4 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-300"
+                        src={selectedAnimeForModal.poster_url || selectedAnimeForModal.thumbnail || '/placeholder-anime.jpg'}
+                        alt={selectedAnimeForModal.title}
+                        width={192}
+                        height={256}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/300x400/6366f1/ffffff?text=Anime';
+                        }}
+                      />
+                    </div>
+                  </motion.div>
 
-                {/* Details */}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <h3 className="text-3xl font-bold text-white drop-shadow-lg">{selectedAnimeForModal.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-white/20 ${getStatusColor(selectedAnimeForModal.status)}`}>
-                      {getStatusIcon(selectedAnimeForModal.status)} {selectedAnimeForModal.status}
-                    </span>
-                  </div>
-                  
-                  <p className="text-white/80 text-lg mb-4 drop-shadow-sm">
-                    {selectedAnimeForModal.description || 'No description available'}
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">🎬</span>
-                      <span className="text-white/90">{selectedAnimeForModal.episode_count || 0} episodes</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">⭐</span>
-                      <span className="text-white/90">
-                        Rating: {analyticsLoading ? 'Loading...' : (animeAnalytics?.analytics?.averageRating || 'N/A')} 
-                        {!analyticsLoading && animeAnalytics?.analytics?.totalReviews > 0 && (
-                          <span className="text-white/60">({animeAnalytics.analytics.totalReviews} reviews)</span>
-                        )}
+                  {/* Details */}
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex-1"
+                  >
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                      <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+                        {selectedAnimeForModal.title}
+                      </h3>
+                      <span className={`px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-sm border-2 ${getStatusColor(selectedAnimeForModal.status)} shadow-lg`}>
+                        {getStatusIcon(selectedAnimeForModal.status)} {selectedAnimeForModal.status}
                       </span>
                     </div>
                     
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">👀</span>
-                      <span className="text-white/90">
-                        {analyticsLoading ? 'Loading...' : (animeAnalytics?.analytics?.views || 0)} views
-                        {!analyticsLoading && animeAnalytics?.analytics?.completedViews > 0 && (
-                          <span className="text-white/60"> ({animeAnalytics.analytics.completedViews} completed)</span>
-                        )}
-                      </span>
+                    <p className="text-gray-700 text-base leading-relaxed mb-6 bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-purple-200">
+                      {selectedAnimeForModal.description || 'No description available'}
+                    </p>
+                    
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl p-4 border-2 border-indigo-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">🎬</span>
+                          <span className="text-xs font-medium text-indigo-700">Episodes</span>
+                        </div>
+                        <p className="text-2xl font-bold text-indigo-900">{selectedAnimeForModal.episode_count || 0}</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl p-4 border-2 border-yellow-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">⭐</span>
+                          <span className="text-xs font-medium text-yellow-700">Rating</span>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-yellow-900">
+                            {analyticsLoading ? '...' : (animeAnalytics?.analytics?.averageRating || 'N/A')}
+                          </p>
+                          {!analyticsLoading && animeAnalytics?.analytics?.totalReviews > 0 && (
+                            <p className="text-xs text-yellow-700">({animeAnalytics.analytics.totalReviews} reviews)</p>
+                          )}
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl p-4 border-2 border-purple-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">👀</span>
+                          <span className="text-xs font-medium text-purple-700">Views</span>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-purple-900">
+                            {analyticsLoading ? '...' : (animeAnalytics?.analytics?.views || 0).toLocaleString()}
+                          </p>
+                          {!analyticsLoading && animeAnalytics?.analytics?.completedViews > 0 && (
+                            <p className="text-xs text-purple-700">({animeAnalytics.analytics.completedViews} completed)</p>
+                          )}
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-pink-100 to-pink-200 rounded-xl p-4 border-2 border-pink-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">📅</span>
+                          <span className="text-xs font-medium text-pink-700">Added</span>
+                        </div>
+                        <p className="text-sm font-bold text-pink-900">{new Date(selectedAnimeForModal.created_at).toLocaleDateString()}</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-red-100 to-red-200 rounded-xl p-4 border-2 border-red-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">📊</span>
+                          <span className="text-xs font-medium text-red-700">Reports</span>
+                        </div>
+                        <p className="text-2xl font-bold text-red-900">
+                          {analyticsLoading ? '...' : (animeAnalytics?.analytics?.reports || 0)}
+                        </p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4 border-2 border-gray-300 shadow-md"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">🆔</span>
+                          <span className="text-xs font-medium text-gray-700">Anime ID</span>
+                        </div>
+                        <p className="font-mono text-xs text-gray-900 truncate">{selectedAnimeForModal.id}</p>
+                      </motion.div>
                     </div>
                     
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">📅</span>
-                      <span className="text-white/90">{new Date(selectedAnimeForModal.created_at).toLocaleDateString()}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">📊</span>
-                      <span className="text-white/90">
-                        {analyticsLoading ? 'Loading...' : (animeAnalytics?.analytics?.reports || 0)} reports
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                      <span className="text-white/70">🆔</span>
-                      <span className="font-mono text-xs text-white/90">{selectedAnimeForModal.id}</span>
-                    </div>
-                    
+                    {/* Genres */}
                     {selectedAnimeForModal.genres && selectedAnimeForModal.genres.length > 0 && (
-                      <div className="col-span-2 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-white/70">🏷️</span>
-                          <span className="text-white/90 font-medium">Genres:</span>
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-6 bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-purple-200"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xl">🏷️</span>
+                          <span className="text-sm font-semibold text-gray-700">Genres:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {selectedAnimeForModal.genres.map((genre: string, index: number) => (
@@ -1211,105 +1424,23 @@ This action cannot be undone.`,
                             </span>
                           ))}
                         </div>
-                      </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Episodes Management */}
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-xl font-bold text-gray-900">Episodes Management</h4>
+                    {episodesCache[selectedAnimeForModal?.id] && (
+                      <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30">
+                        ⚡ {episodesCache[selectedAnimeForModal.id].length} episodes loaded instantly
+                      </span>
                     )}
                   </div>
-                </div>
-              </div>
 
-              {/* Quick Actions */}
-              <div className="border-t border-white/10 pt-6">
-                <h4 className="text-lg font-semibold text-white drop-shadow-lg mb-4">Quick Actions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-white/80">Change Status</label>
-                    <select
-                      value={selectedAnimeForModal.status}
-                      onChange={(e) => {
-                        handleStatusChange(selectedAnimeForModal.id, e.target.value as any);
-                        setSelectedAnimeForModal({...selectedAnimeForModal, status: e.target.value});
-                      }}
-                      disabled={updatingAnime === selectedAnimeForModal.id}
-                      className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/30 focus:border-white/30 disabled:opacity-50"
-                    >
-                      <option value="published" className="bg-gray-800 text-white">Published</option>
-                      <option value="pending" className="bg-gray-800 text-white">Pending</option>
-                      <option value="draft" className="bg-gray-800 text-white">Draft</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-white/80">Actions</label>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          handleEditAnime(selectedAnimeForModal);
-                          closeAnimeModal();
-                        }}
-                        className="px-4 py-2 bg-purple-500/80 backdrop-blur-sm text-white rounded-lg hover:bg-purple-600/80 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/50"
-                      >
-                        Edit Anime
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleAddEpisode(selectedAnimeForModal);
-                          closeAnimeModal();
-                        }}
-                        className="px-4 py-2 bg-green-500/80 backdrop-blur-sm text-white rounded-lg hover:bg-green-600/80 transition-all duration-200 border border-green-400/30 hover:border-green-400/50"
-                      >
-                        Add Episode
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleScrapAnime(selectedAnimeForModal);
-                        }}
-                        className="px-4 py-2 bg-orange-500/80 backdrop-blur-sm text-white rounded-lg hover:bg-orange-600/80 transition-all duration-200 border border-orange-400/30 hover:border-orange-400/50 flex items-center space-x-1"
-                      >
-                        <span>🎬</span>
-                        <span>Scrap Episodes</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleLargeScrape(selectedAnimeForModal);
-                        }}
-                        className="px-4 py-2 bg-purple-500/80 backdrop-blur-sm text-white rounded-lg hover:bg-purple-600/80 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/50 flex items-center space-x-1"
-                      >
-                        <span>🚀</span>
-                        <span>Large Scrape</span>
-                      </button>
-                  <button
-                        onClick={() => {
-                          handleDeleteAnime(selectedAnimeForModal.id, selectedAnimeForModal.title);
-                          closeAnimeModal();
-                        }}
-                        disabled={updatingAnime === selectedAnimeForModal.id}
-                        className="px-4 py-2 bg-red-500/80 backdrop-blur-sm text-white rounded-lg hover:bg-red-600/80 disabled:opacity-50 transition-all duration-200 border border-red-400/30 hover:border-red-400/50"
-                      >
-                        Delete Anime
-                  </button>
-                      <button
-                        onClick={closeAnimeModal}
-                        className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-200 border border-white/20 hover:border-white/30"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Episodes Management */}
-              <div className="border-t border-white/10 pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-white drop-shadow-lg">Episodes Management</h4>
-                  {episodesCache[selectedAnimeForModal?.id] && (
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30">
-                      ⚡ {episodesCache[selectedAnimeForModal.id].length} episodes loaded instantly
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3">
+                  <div className="space-y-3">
                   {episodesLoading ? (
                     <div className="text-center py-8">
                       <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2"></div>
@@ -1358,6 +1489,7 @@ This action cannot be undone.`,
                         </div>
                       ))
                     )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1424,30 +1556,44 @@ This action cannot be undone.`,
 
       {/* Anime Importer Modal */}
       {showImporter && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4"
           onClick={() => setShowImporter(false)}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl border border-purple-200/60 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Anime Data Importer</h2>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/80 via-purple-500/80 to-pink-500/80" />
+            <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_#fff5,_#ffffff00_45%)]" />
+
+            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/20 backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-lg">
+                  📥
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white drop-shadow">Anime Data Importer</h2>
+                  <p className="text-white/80 text-sm">Bulk import with validation and previews</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowImporter(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 p-3 rounded-xl"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6" onClick={(e) => e.stopPropagation()}>
-              <EnhancedAnimeImporter onImportComplete={handleAnimeImported} />
+
+            <div className="relative p-6 overflow-y-auto max-h-[calc(90vh-90px)] bg-white/5 backdrop-blur-xl">
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 shadow-lg">
+                <EnhancedAnimeImporter onImportComplete={handleAnimeImported} />
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1455,30 +1601,44 @@ This action cannot be undone.`,
 
       {/* Episode Scraper Modal */}
       {showScraper && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4"
           onClick={() => setShowScraper(false)}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl border border-indigo-200/60 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">HiAnime.do Scraper</h2>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/85 via-purple-600/85 to-pink-500/80" />
+            <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_bottom_right,_#fff7,_#ffffff00_45%)]" />
+
+            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/20 backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-lg">
+                  🕸️
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white drop-shadow">HiAnime.do Scraper</h2>
+                  <p className="text-white/80 text-sm">Streamed progress with SSE</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowScraper(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 p-3 rounded-xl"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6" onClick={(e) => e.stopPropagation()}>
-              <AnimeScraperComponent />
+
+            <div className="relative p-6 overflow-y-auto max-h-[calc(90vh-90px)] bg-white/5 backdrop-blur-xl">
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 shadow-lg">
+                <AnimeScraperComponent />
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1506,40 +1666,53 @@ This action cannot be undone.`,
 
       {/* Large Anime Scraper Modal */}
       {showLargeScraper && selectedAnimeForLargeScraping && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        <div
+          className="fixed inset-0 bg-black/75 backdrop-blur-xl z-50 flex items-center justify-center p-4"
           onClick={handleCloseLargeScraper}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 40 }}
+            className="relative bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-black/90 border border-purple-500/30 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-800">
-                🚀 Large Anime Scraper
-              </h2>
+            <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_left,_#a855f7_0,_transparent_40%)]" />
+            <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_bottom_right,_#22d3ee_0,_transparent_45%)]" />
+
+            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-2xl text-white shadow-lg">
+                  🚀
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white drop-shadow">Large Anime Scraper</h2>
+                  <p className="text-white/70 text-sm">High-volume episode scraping with batching</p>
+                </div>
+              </div>
               <button
                 onClick={handleCloseLargeScraper}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 p-3 rounded-xl"
               >
-                <i className="ri-close-line text-2xl"></i>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <LargeAnimeScraper
-                animeId={selectedAnimeForLargeScraping.id}
-                animeTitle={selectedAnimeForLargeScraping.title}
-                totalEpisodes={selectedAnimeForLargeScraping.total_episodes || 1000}
-                onScrapingComplete={async () => {
-                  await handleCloseLargeScraper();
-                  setSuccessMessage('Large scraping completed successfully! Episodes have been refreshed.');
-                  setTimeout(() => setSuccessMessage(null), 5000);
-                }}
-              />
+            <div className="relative p-6 overflow-y-auto max-h-[calc(90vh-110px)]">
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 shadow-xl">
+                <LargeAnimeScraper
+                  animeId={selectedAnimeForLargeScraping.id}
+                  animeTitle={selectedAnimeForLargeScraping.title}
+                  totalEpisodes={selectedAnimeForLargeScraping.total_episodes || 1000}
+                  onScrapingComplete={async () => {
+                    await handleCloseLargeScraper();
+                    setSuccessMessage('Large scraping completed successfully! Episodes have been refreshed.');
+                    setTimeout(() => setSuccessMessage(null), 5000);
+                  }}
+                />
+              </div>
             </div>
           </motion.div>
         </div>

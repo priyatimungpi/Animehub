@@ -165,8 +165,14 @@ async function getBrowser() {
       }
     }
     console.log('🔄 Launching new browser instance...');
+    
+    // Use system Chromium in Docker/Alpine Linux
+    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
+    console.log(`Using Chromium at: ${executablePath}`);
+    
     sharedBrowser = await chromium.launch({
       headless: true,
+      executablePath: executablePath,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
     });
     if (!sharedBrowser) {
@@ -1505,6 +1511,119 @@ app.post('/api/batch-scrape-episodes', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Streaming batch scrape endpoint with real-time progress
+app.post('/api/batch-scrape-episodes-stream', async (req, res) => {
+  try {
+    const { animeTitle, animeId, episodeNumbers, options = {} } = req.body;
+
+    if (!animeTitle || !animeId || !episodeNumbers) {
+      return res.status(400).json({
+        success: false,
+        error: 'Anime title, ID, and episode numbers are required'
+      });
+    }
+
+    // Set headers for Server-Sent Events
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+    res.flushHeaders(); // Send headers immediately
+
+    console.log(`🎬 Streaming batch scrape for ${episodeNumbers.length} episodes: "${animeTitle}"`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Send initial progress
+    res.write(`data: ${JSON.stringify({
+      type: 'start',
+      total: episodeNumbers.length,
+      animeTitle
+    })}\n\n`);
+    
+    // Force flush to client
+    if (res.flush) res.flush();
+
+    // Scrape each episode
+    for (let i = 0; i < episodeNumbers.length; i++) {
+      const episodeNumber = episodeNumbers[i];
+      
+      try {
+        // Send progress update
+        res.write(`data: ${JSON.stringify({
+          type: 'progress',
+          episode: episodeNumber,
+          current: i + 1,
+          total: episodeNumbers.length,
+          status: 'scraping'
+        })}\n\n`);
+
+        const scrapeResult = await NineAnimeScraperService.scrapeAnimeEpisode(
+          animeTitle,
+          episodeNumber,
+          {
+            timeout: options.timeout || 30000,
+            retries: options.retries || 2
+          }
+        );
+
+        if (scrapeResult.success && scrapeResult.streamUrl) {
+          successCount++;
+          
+          // Send success update
+          res.write(`data: ${JSON.stringify({
+            type: 'success',
+            episode: episodeNumber,
+            current: i + 1,
+            total: episodeNumbers.length,
+            url: scrapeResult.streamUrl,
+            title: scrapeResult.episodeData?.title || `Episode ${episodeNumber}`
+          })}\n\n`);
+        } else {
+          throw new Error(scrapeResult.error || 'Scraping failed');
+        }
+
+      } catch (error) {
+        errorCount++;
+        
+        // Send error update
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          episode: episodeNumber,
+          current: i + 1,
+          total: episodeNumbers.length,
+          error: error.message
+        })}\n\n`);
+      }
+
+      // Delay between episodes
+      if (i < episodeNumbers.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, options.delayBetweenEpisodes || 2000));
+      }
+    }
+
+    // Send completion message
+    res.write(`data: ${JSON.stringify({
+      type: 'complete',
+      successCount,
+      errorCount,
+      total: episodeNumbers.length,
+      successRate: Math.round((successCount / episodeNumbers.length) * 100 * 10) / 10
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('❌ Streaming batch scrape error:', error);
+    res.write(`data: ${JSON.stringify({
+      type: 'error',
+      error: error.message
+    })}\n\n`);
+    res.end();
   }
 });
 

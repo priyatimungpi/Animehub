@@ -28,6 +28,7 @@ export interface BatchScrapeResult {
     errorCount: number;
     successRate: number;
   };
+  error?: string;
 }
 
 // Browser-compatible service that calls the server-side scraper
@@ -248,6 +249,110 @@ export class HiAnimeScraperService {
         }
       };
     }
+  }
+
+  /**
+   * Batch scrape with real-time progress updates using Server-Sent Events
+   */
+  static async batchScrapeEpisodesWithProgress(
+    animeTitle: string,
+    animeId: string,
+    episodeNumbers: number[],
+    onProgress: (event: {
+      type: 'start' | 'progress' | 'success' | 'error' | 'complete';
+      episode?: number;
+      current?: number;
+      total?: number;
+      status?: string;
+      url?: string;
+      title?: string;
+      error?: string;
+      successCount?: number;
+      errorCount?: number;
+      successRate?: number;
+    }) => void,
+    options: {
+      headless?: boolean;
+      timeout?: number;
+      retries?: number;
+      delayBetweenEpisodes?: number;
+    } = {}
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const url = `${this.API_BASE_URL}/api/batch-scrape-episodes-stream`;
+      
+      console.log('🌐 Fetching:', url);
+      console.log('📦 Request body:', { animeTitle, animeId, episodeNumbers, options });
+      
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          animeTitle,
+          animeId,
+          episodeNumbers,
+          options
+        })
+      }).then(response => {
+        console.log('📡 Response status:', response.status, response.statusText);
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('Response body is not readable');
+        }
+
+        console.log('📖 Starting to read SSE stream...');
+
+        function readStream(): void {
+          reader!.read().then(({ done, value }) => {
+            if (done) {
+              console.log('✅ Stream complete');
+              resolve();
+              return;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('📦 Received chunk:', chunk);
+            const lines = chunk.split('\n\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  console.log('✨ Parsed SSE data:', data);
+                  onProgress(data);
+                  
+                  if (data.type === 'complete') {
+                    resolve();
+                    return;
+                  }
+                } catch (e) {
+                  console.error('❌ Error parsing SSE data:', e, 'Raw line:', line);
+                }
+              }
+            }
+
+            readStream();
+          }).catch(error => {
+            console.error('❌ Stream read error:', error);
+            reject(error);
+          });
+        }
+
+        readStream();
+      }).catch(error => {
+        console.error('❌ Fetch error:', error);
+        reject(error);
+      });
+    });
   }
 
   /**

@@ -54,10 +54,29 @@ export const AnimeScraperComponent: React.FC = () => {
   const [currentScrapedEpisodes, setCurrentScrapedEpisodes] = useState<any[]>([]);
   const [existingEpisodes, setExistingEpisodes] = useState<Set<number>>(new Set());
 
+  // Progress tracking state
+  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [currentProgress, setCurrentProgress] = useState<{
+    current: number;
+    total: number;
+    successCount: number;
+    errorCount: number;
+  } | null>(null);
+  const [episodeStatuses, setEpisodeStatuses] = useState<Record<number, {
+    status: 'pending' | 'scraping' | 'success' | 'error';
+    message?: string;
+  }>>({});
+
   // Load anime list on component mount
   useEffect(() => {
+    console.log('🎯 AnimeScraperComponent mounted');
     loadAnimeList();
   }, []);
+
+  // Log when selectedAnime changes
+  useEffect(() => {
+    console.log('🎬 Selected anime changed:', selectedAnime);
+  }, [selectedAnime]);
 
   // Filter anime based on search term
   useEffect(() => {
@@ -227,6 +246,8 @@ export const AnimeScraperComponent: React.FC = () => {
   };
 
   const handleScrapeAllEpisodes = async () => {
+    console.log('🔥 handleScrapeAllEpisodes called!', { selectedAnime });
+    
     if (!selectedAnime) {
       setError('Please select an anime first');
       return;
@@ -235,26 +256,103 @@ export const AnimeScraperComponent: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
+    setProgressMessages([]);
+    setCurrentProgress(null);
+    setEpisodeStatuses({});
+
+    // Generate episode numbers array
+    const totalEpisodes = selectedAnime.total_episodes || 13;
+    const episodeNumbers = Array.from({ length: totalEpisodes }, (_, i) => i + 1);
+    
+    // Initialize all episodes as pending
+    const initialStatuses: Record<number, { status: 'pending' }> = {};
+    episodeNumbers.forEach(ep => {
+      initialStatuses[ep] = { status: 'pending' };
+    });
+    setEpisodeStatuses(initialStatuses);
+
+    console.log('📋 Episode numbers generated:', episodeNumbers);
+    console.log('🌐 API URL:', import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001');
 
     try {
-      const result = await HiAnimeScraperService.scrapeAllEpisodes(selectedAnime.title, {
-        animeId: selectedAnime.id,
-        maxEpisodes: selectedAnime.total_episodes || 50
-      });
-
-      if (result.success && result.data) {
-        setScrapedEpisodesData(result.data);
-        setShowScrapedEpisodes(true);
-        setSuccess(`Scraped ${result.data.summary?.successful || 0} episodes successfully!`);
-        setTimeout(() => setSuccess(null), 5000);
-      } else {
-        setError(result.error || 'Scraping failed');
-        setTimeout(() => setError(null), 5000);
-      }
+      console.log('🚀 Starting batch scrape for:', selectedAnime.title, 'Episodes:', episodeNumbers);
+      console.log('📞 Calling batchScrapeEpisodesWithProgress...');
+      
+      await HiAnimeScraperService.batchScrapeEpisodesWithProgress(
+        selectedAnime.title,
+        selectedAnime.id,
+        episodeNumbers,
+        (event) => {
+          console.log('📊 Progress event received:', event);
+          
+          // Handle progress updates
+          switch (event.type) {
+            case 'start':
+              console.log('🎬 START event - setting progress messages');
+              setCurrentProgress({
+                current: 0,
+                total: event.total || 0,
+                successCount: 0,
+                errorCount: 0
+              });
+              break;
+            
+            case 'progress':
+              console.log('📺 PROGRESS event - episode', event.episode, 'scraping');
+              setEpisodeStatuses(prev => ({
+                ...prev,
+                [event.episode!]: { status: 'scraping' }
+              }));
+              break;
+            
+            case 'success':
+              console.log('✅ SUCCESS event - episode', event.episode);
+              setEpisodeStatuses(prev => ({
+                ...prev,
+                [event.episode!]: { status: 'success', message: 'Scraped successfully' }
+              }));
+              setCurrentProgress(prev => prev ? {
+                ...prev,
+                current: event.current || prev.current,
+                successCount: prev.successCount + 1
+              } : null);
+              break;
+            
+            case 'error':
+              console.log('❌ ERROR event - episode', event.episode);
+              setEpisodeStatuses(prev => ({
+                ...prev,
+                [event.episode!]: { status: 'error', message: event.error || 'Failed' }
+              }));
+              setCurrentProgress(prev => prev ? {
+                ...prev,
+                current: event.current || prev.current,
+                errorCount: prev.errorCount + 1
+              } : null);
+              break;
+            
+            case 'complete':
+              console.log('🎉 COMPLETE event');
+              setSuccess(`Scraped ${event.successCount} out of ${event.total} episodes!`);
+              setTimeout(() => setSuccess(null), 5000);
+              break;
+          }
+        },
+        {
+          headless: true,
+          timeout: 30000,
+          retries: 2,
+          delayBetweenEpisodes: 3000
+        }
+      );
+      
+      console.log('✅ Batch scrape completed successfully!');
     } catch (error) {
+      console.error('❌ Error during batch scrape:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
       setTimeout(() => setError(null), 5000);
     } finally {
+      console.log('🏁 Finally block - setting isLoading to false');
       setIsLoading(false);
     }
   };
@@ -484,6 +582,64 @@ export const AnimeScraperComponent: React.FC = () => {
                 {isLoading ? <LoadingSpinner size="sm" /> : '🚀 Scrape All'}
               </Button>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Progress Messages Display - STANDALONE */}
+      {(Object.keys(episodeStatuses).length > 0 && isLoading) && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
+              📺 Scraping Progress
+            </h3>
+            {currentProgress && (
+              <span className="text-sm font-medium">
+                {currentProgress.current}/{currentProgress.total} episodes
+                {' • '}
+                <span className="text-green-600">✅ {currentProgress.successCount}</span>
+                {' • '}
+                <span className="text-red-600">❌ {currentProgress.errorCount}</span>
+              </span>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {Object.entries(episodeStatuses).map(([episodeNum, status]) => {
+              const bgColor = {
+                pending: 'bg-gray-100 text-gray-400',
+                scraping: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                success: 'bg-green-100 text-green-700 border-green-300',
+                error: 'bg-red-100 text-red-700 border-red-300'
+              }[status.status];
+              
+              const icon = {
+                pending: '⏳',
+                scraping: '🔄',
+                success: '✅',
+                error: '❌'
+              }[status.status];
+
+              return (
+                <div
+                  key={episodeNum}
+                  className={`p-3 rounded-lg border-2 transition-all ${bgColor} ${
+                    status.status === 'scraping' ? 'animate-pulse' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">EP {episodeNum}</span>
+                    <span className="text-lg">{icon}</span>
+                  </div>
+                  {status.status === 'scraping' && (
+                    <div className="text-xs mt-1">Scraping...</div>
+                  )}
+                  {status.message && status.status !== 'scraping' && (
+                    <div className="text-xs mt-1 truncate">{status.message}</div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}

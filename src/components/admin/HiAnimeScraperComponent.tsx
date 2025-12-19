@@ -41,6 +41,15 @@ export const HiAnimeScraperComponent: React.FC = () => {
   const [showScrapedEpisodes, setShowScrapedEpisodes] = useState(false);
   const [scrapedEpisodesData, setScrapedEpisodesData] = useState<any>(null);
 
+  // Progress tracking state
+  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [currentProgress, setCurrentProgress] = useState<{
+    current: number;
+    total: number;
+    successCount: number;
+    errorCount: number;
+  } | null>(null);
+
   // Load anime list for selection
   React.useEffect(() => {
     loadAnimeList();
@@ -109,12 +118,81 @@ export const HiAnimeScraperComponent: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setBatchResult(null);
+    setProgressMessages([]);
+    setCurrentProgress(null);
 
     try {
-      const result = await HiAnimeScraperService.batchScrapeEpisodes(
+      // Use streaming version for real-time updates
+      await HiAnimeScraperService.batchScrapeEpisodesWithProgress(
         animeTitle,
         animeId,
         episodeNumbers,
+        (event) => {
+          // Handle progress updates
+          switch (event.type) {
+            case 'start':
+              setProgressMessages([`🎬 Starting to scrape ${event.total} episodes...`]);
+              setCurrentProgress({
+                current: 0,
+                total: event.total || 0,
+                successCount: 0,
+                errorCount: 0
+              });
+              break;
+            
+            case 'progress':
+              setProgressMessages(prev => [
+                ...prev,
+                `📺 Scraping episode ${event.episode} (${event.current}/${event.total})...`
+              ]);
+              break;
+            
+            case 'success':
+              setProgressMessages(prev => [
+                ...prev,
+                `✅ Episode ${event.episode} scraped successfully!`
+              ]);
+              setCurrentProgress(prev => prev ? {
+                ...prev,
+                current: event.current || prev.current,
+                successCount: prev.successCount + 1
+              } : null);
+              break;
+            
+            case 'error':
+              setProgressMessages(prev => [
+                ...prev,
+                `❌ Episode ${event.episode} failed: ${event.error}`
+              ]);
+              setCurrentProgress(prev => prev ? {
+                ...prev,
+                current: event.current || prev.current,
+                errorCount: prev.errorCount + 1
+              } : null);
+              break;
+            
+            case 'complete':
+              setProgressMessages(prev => [
+                ...prev,
+                `\n🎉 Batch scraping completed!`,
+                `✅ Success: ${event.successCount}/${event.total}`,
+                `❌ Errors: ${event.errorCount}/${event.total}`,
+                `📊 Success rate: ${event.successRate}%`
+              ]);
+              // Build final result for display
+              setBatchResult({
+                success: true,
+                results: [],
+                summary: {
+                  totalEpisodes: event.total || 0,
+                  successCount: event.successCount || 0,
+                  errorCount: event.errorCount || 0,
+                  successRate: event.successRate || 0
+                }
+              });
+              break;
+          }
+        },
         {
           headless: true,
           timeout: 30000,
@@ -123,13 +201,12 @@ export const HiAnimeScraperComponent: React.FC = () => {
         }
       );
 
-      setBatchResult(result);
-      
-      if (!result.success) {
-        setError(`Batch scraping completed with ${result.summary.errorCount} errors`);
-      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      setProgressMessages(prev => [
+        ...prev,
+        `❌ Fatal error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +274,7 @@ export const HiAnimeScraperComponent: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-900">HiAnime.do Scraper</h2>
         <Button
           onClick={handleTestScraper}
-          variant="outline"
+          variant="secondary"
           disabled={isLoading}
           className="text-sm"
         >
@@ -369,6 +446,39 @@ export const HiAnimeScraperComponent: React.FC = () => {
           ) : (
             <div className="text-red-800">
               <strong>Error:</strong> {scrapeResult.error}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Progress Messages Display */}
+      {progressMessages.length > 0 && (
+        <Card className="p-6 border-purple-200 bg-purple-50">
+          <h3 className="text-lg font-semibold mb-4 text-purple-800 flex items-center justify-between">
+            <span>🔄 Scraping Progress</span>
+            {currentProgress && (
+              <span className="text-sm font-normal">
+                {currentProgress.current}/{currentProgress.total} episodes
+                {' - '}
+                ✅ {currentProgress.successCount} ❌ {currentProgress.errorCount}
+              </span>
+            )}
+          </h3>
+          
+          <div className="bg-white rounded border p-4 max-h-96 overflow-y-auto">
+            <div className="space-y-1 font-mono text-sm">
+              {progressMessages.map((msg, idx) => (
+                <div key={idx} className="text-gray-700 whitespace-pre-wrap">
+                  {msg}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {isLoading && (
+            <div className="mt-4 flex items-center justify-center">
+              <LoadingSpinner size="sm" />
+              <span className="ml-2 text-purple-700">Scraping in progress...</span>
             </div>
           )}
         </Card>

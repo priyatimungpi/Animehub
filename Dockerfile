@@ -1,16 +1,17 @@
-# AnimeHub Express Server Dockerfile
+# AnimeHub Express Server Dockerfile  
 FROM node:20-alpine
 
-# Install Playwright dependencies
+# Install Chromium and dependencies for Playwright
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
+    freetype-dev \
     harfbuzz \
     ca-certificates \
     ttf-freefont
 
-# Set Playwright to use installed Chromium
+# Tell Playwright to skip download and use system Chromium
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
@@ -21,9 +22,6 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm ci --only=production
-
-# Install Playwright
-RUN npx playwright install chromium || true
 
 # Copy application files
 COPY server/ ./server/
